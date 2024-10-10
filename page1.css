@@ -36,16 +36,69 @@ p {
   margin-right: 20px;
 }
 
-p img {
-  float: left;
-  margin-right: 10px;
+.text_img {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-left: 20px;
+}
+
+@media screen and (max-width: 700px) {
+  .text_img {
+    flex-direction: column;
+  }  
 }
 
 ul {
-  list-style-type: square;
+  list-style-type: none;
   margin-left: 20px;
   padding-left: 20px;
   color: #fff;
+}
+
+label{
+  display: block;
+  cursor: pointer;
+  padding: 10px;
+  border: 1px solid #fff;
+  margin-left: 20px;
+  width: 10%;
+  color: #fff;
+  background-color: #333;
+}
+
+label:hover {
+  background-color: #fff;
+  color: #333;
+}
+
+input[type="checkbox"]{
+  position: absolute;
+  left: -9999px;
+}
+
+input[type="checkbox"] ~ ul{
+  height: 0;
+  transform: scaleY(0);
+}
+
+input[type="checkbox"]:checked ~ ul{
+  height: 100%;
+  transform-origin: top;
+  transition: transform .2s ease-out;
+  transform: scaleY(1); 
+}
+
+input[type="checkbox"]:checked + label{
+  background: rgb(214, 193, 0);
+  border-bottom: 1px solid #fff;
 }
 
 header {
