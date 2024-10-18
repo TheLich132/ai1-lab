@@ -1,0 +1,184 @@
+/* General settings */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+body {
+    background-color: #f4f7fc;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    height: 100vh;
+    padding: 20px;
+}
+
+/* Container */
+.container {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 1000px;
+    width: 100%;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Search Bar */
+#search {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+    transition: all 0.2s ease;
+    margin-bottom: 20px;
+}
+
+#search:focus {
+    border-color: #3b5998;
+    outline: none;
+    box-shadow: 0px 0px 5px rgba(59, 89, 152, 0.5);
+}
+
+/* Task List */
+ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+#taskList li {
+    display: grid;
+    grid-template-columns: 40px 1fr 200px 120px;
+    align-items: center;
+    gap: 10px;
+    background-color: #f9f9f9;
+    margin-bottom: 10px;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    transition: background-color 0.3s ease;
+}
+
+#taskList li:hover {
+    background-color: #eef3fb;
+}
+
+#taskList li span {
+    flex-grow: 1;
+    cursor: pointer;
+    padding-right: 10px;
+}
+
+#taskList li input {
+    flex-grow: 1;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+    transition: all 0.2s ease;
+}
+
+#taskList li input:focus {
+    border-color: #3b5998;
+    outline: none;
+    box-shadow: 0px 0px 5px rgba(59, 89, 152, 0.5);
+}
+
+/* Checkbox */
+.task-checkbox {
+    justify-self: start;
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+}
+
+/* Task Name */
+#taskList li span {
+    cursor: pointer;
+    padding-right: 10px;
+}
+
+/* Task Deadline */
+.task-deadline {
+    justify-self: end;
+    font-size: 14px;
+    color: #888;
+}
+
+/* Delete Button */
+#taskList li button {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 20px;
+    color: #e74c3c;
+    transition: color 0.2s ease;
+    justify-self: end;
+}
+
+#taskList li button:hover {
+    color: #c0392b;
+}
+
+/* Add Task Section */
+.add-task-container {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+
+.add-task-container input[type="text"], 
+.add-task-container input[type="datetime-local"] {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+    transition: all 0.2s ease;
+}
+
+.add-task-container input[type="text"]:focus, 
+.add-task-container input[type="datetime-local"]:focus {
+    border-color: #3b5998;
+    outline: none;
+    box-shadow: 0px 0px 5px rgba(59, 89, 152, 0.5);
+}
+
+.add-task-container button {
+    width: 30%;
+    background-color: #3b5998;
+    color: #ffffff;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.add-task-container button:hover {
+    background-color: #314b82;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+
+    .container {
+        padding: 15px;
+    }
+
+    .add-task-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
