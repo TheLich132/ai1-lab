@@ -6,8 +6,10 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 let marker;
 let puzzlePieces = [];
+let emptySlots = []; // Stores the empty slots in emptyArea
 let correctPositions = new Array(16).fill(false);
 let draggedPiece = null;
+let draggedFromArea = null; // Track if piece is dragged from puzzleArea or emptyArea
 
 // Request permissions
 async function requestPermissions() {
@@ -35,28 +37,39 @@ document.getElementById('locationBtn').addEventListener('click', () => {
 });
 
 // Download map button handler
+let play_counter = 0;
 document.getElementById('downloadBtn').addEventListener('click', () => {
-    leafletImage(map, function (err, canvas) {
-        if (err) {
-            console.error('Error capturing map:', err);
-            return;
-        }
-        const imgData = canvas.toDataURL('image/png');
-        createPuzzle(imgData);
-    });
+    if (play_counter === 0) {
+        leafletImage(map, function (err, canvas) {
+            if (err) {
+                console.error('Error capturing map:', err);
+                return;
+            }
+            const imgData = canvas.toDataURL('image/png');
+            createPuzzle(imgData);
+        });
+        play_counter++;
+    } else {
+        alert('Odśwież stronę, aby rozpocząć nową grę!');
+    }
 });
 
 // Create puzzle from map image
 function createPuzzle(imgData) {
     const puzzleArea = document.getElementById('puzzleArea');
+    const emptyArea = document.getElementById('emptyArea');
+    
     puzzleArea.innerHTML = '';
+    emptyArea.innerHTML = ''; // Clear emptyArea for new empty slots
+
     puzzlePieces = [];
+    emptySlots = [];
     correctPositions = new Array(16).fill(false);
 
     // Create temporary image to get dimensions
     const tempImg = new Image();
     tempImg.onload = function () {
-        // Create puzzle pieces
+        // Create puzzle pieces for puzzleArea
         for (let i = 0; i < 16; i++) {
             const piece = document.createElement('div');
             piece.className = 'puzzle-piece';
@@ -81,14 +94,26 @@ function createPuzzle(imgData) {
             puzzlePieces.push(piece);
         }
 
-        // Shuffle and add pieces
+        // Shuffle and add pieces to puzzleArea
         shuffleArray(puzzlePieces);
         puzzlePieces.forEach((piece, index) => {
             piece.dataset.currentIndex = index;
             puzzleArea.appendChild(piece);
         });
 
-        // Setup drag and drop
+        // Create empty slots in emptyArea
+        for (let i = 0; i < 16; i++) {
+            const emptySlot = document.createElement('div');
+            emptySlot.className = 'puzzle-piece empty-slot';
+            emptySlot.dataset.index = i; // Store index of the slot
+
+            // Add grey background to empty slots
+            emptySlot.style.backgroundColor = '#ccc';
+            emptyArea.appendChild(emptySlot);
+            emptySlots.push(emptySlot); // Add slot to the array for tracking
+        }
+
+        // Setup drag and drop between puzzleArea and emptyArea
         setupDragAndDrop();
     };
     tempImg.src = imgData;
@@ -105,78 +130,86 @@ function shuffleArray(array) {
 // Setup drag and drop
 function setupDragAndDrop() {
     const pieces = document.querySelectorAll('.puzzle-piece');
+    const puzzleArea = document.getElementById('puzzleArea');
+    const emptyArea = document.getElementById('emptyArea');
 
     pieces.forEach(piece => {
         // Dragstart event
         piece.addEventListener('dragstart', (e) => {
             draggedPiece = piece;
+            draggedFromArea = piece.parentElement; // Remember which area the piece was dragged from
             piece.classList.add('dragging');
             e.dataTransfer.setData('text/plain', piece.dataset.currentIndex);
         });
 
         // Dragend event
-        piece.addEventListener('dragend', (e) => {
+        piece.addEventListener('dragend', () => {
             piece.classList.remove('dragging');
             draggedPiece = null;
-            pieces.forEach(p => p.classList.remove('dragover'));
+            draggedFromArea = null;
         });
+    });
 
-        // Dragenter event
-        piece.addEventListener('dragenter', (e) => {
-            e.preventDefault();
-            if (piece !== draggedPiece) {
-                piece.classList.add('dragover');
-            }
-        });
-
-        // Dragleave event
-        piece.addEventListener('dragleave', (e) => {
-            piece.classList.remove('dragover');
-        });
-
-        // Dragover event
-        piece.addEventListener('dragover', (e) => {
+    // Allow dropping on empty slots in emptyArea
+    emptySlots.forEach(slot => {
+        slot.addEventListener('dragover', (e) => {
             e.preventDefault();
         });
 
-        // Drop event
-        piece.addEventListener('drop', (e) => {
+        slot.addEventListener('drop', (e) => {
             e.preventDefault();
-            piece.classList.remove('dragover');
+            if (draggedPiece && slot.classList.contains('empty-slot')) {
+                // Replace empty slot with dragged puzzle piece
+                const tempSlot = slot.cloneNode(true); // Clone the empty slot
 
-            if (draggedPiece && piece !== draggedPiece) {
-                const fromIndex = parseInt(draggedPiece.dataset.currentIndex);
-                const toIndex = parseInt(piece.dataset.currentIndex);
+                emptyArea.replaceChild(draggedPiece, slot);
+                draggedPiece.classList.remove('empty-slot');
+                draggedPiece.dataset.currentIndex = slot.dataset.index;
 
-                // Swap the pieces in the DOM
-                const parent = piece.parentNode;
-                const placeholder = document.createElement('div');
-                parent.insertBefore(placeholder, draggedPiece);
-                parent.insertBefore(draggedPiece, piece);
-                parent.insertBefore(piece, placeholder);
-                parent.removeChild(placeholder);
+                // Add the empty slot back to the puzzle area (switch places)
+                draggedFromArea.appendChild(tempSlot);
+                setupDragAndDrop(); // Re-initialize drag and drop for new elements
 
-                // Update current indices after swapping
-                draggedPiece.dataset.currentIndex = toIndex;
-                piece.dataset.currentIndex = fromIndex;
-
-                // Check if the puzzle is completed
                 updatePuzzleState();
             }
         });
+    });
+
+    // Allow dropping back into puzzleArea
+    puzzleArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+    });
+
+    puzzleArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        if (draggedPiece && draggedPiece.parentElement === emptyArea) {
+            const tempPiece = document.createElement('div');
+            tempPiece.className = 'puzzle-piece empty-slot';
+            tempPiece.style.backgroundColor = '#ccc';
+
+            // Switch places between dragged piece and an empty slot
+            puzzleArea.appendChild(draggedPiece);
+            emptyArea.appendChild(tempPiece);
+            
+            setupDragAndDrop(); // Re-initialize drag and drop for new elements
+            updatePuzzleState();
+        }
     });
 }
 
 // Function to check the positions of all pieces
 function updatePuzzleState() {
-    correctPositions = puzzlePieces.map(piece => {
+    const emptyArea = document.getElementById('emptyArea');
+    const piecesInEmptyArea = emptyArea.querySelectorAll('.puzzle-piece');
+
+    correctPositions = Array.from(piecesInEmptyArea).map(piece => {
         const originalIndex = parseInt(piece.dataset.originalIndex);
         const currentIndex = parseInt(piece.dataset.currentIndex);
         return originalIndex === currentIndex;
     });
 
     // If all pieces are correctly placed, notify the user
-    if (correctPositions.every(pos => pos)) {
+    if (correctPositions.length === 16 && correctPositions.every(pos => pos)) {
         console.log('Puzzle completed!');
         if (Notification.permission === 'granted') {
             new Notification('Gratulacje!', {
@@ -186,17 +219,6 @@ function updatePuzzleState() {
             alert('Gratulacje! Układanka została poprawnie ułożona!');
         }
     }
-}
-
-// Check if a specific piece is in the correct position (optional)
-function checkPosition(index) {
-    const piece = document.querySelector(`.puzzle-piece[data-current-index="${index}"]`);
-    if (!piece) return;
-
-    const originalIndex = parseInt(piece.dataset.originalIndex);
-    const currentIndex = parseInt(piece.dataset.currentIndex);
-
-    correctPositions[currentIndex] = (originalIndex === currentIndex);
 }
 
 // Initialize puzzle state on page load

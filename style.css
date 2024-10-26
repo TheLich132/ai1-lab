@@ -65,6 +65,8 @@ header p {
     width: 800px;
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    margin: 0 auto;
+    margin-bottom: 40px;
 }
 
 .puzzle-area {
@@ -79,7 +81,7 @@ header p {
 }
 
 /* Puzzle Piece Styles */
-.puzzle-piece {
+.puzzle-piece, .empty-piece {
     position: relative;
     cursor: move;
     overflow: hidden;
