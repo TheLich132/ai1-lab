@@ -1,184 +1,151 @@
-/* General settings */
+/* Reset */
 * {
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
-    font-family: 'Arial', sans-serif;
 }
 
+/* Global Styles */
 body {
-    background-color: #f4f7fc;
+    font-family: 'Roboto', sans-serif;
+    background-color: #f4f4f9;
     color: #333;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    height: 100vh;
     padding: 20px;
 }
 
-/* Container */
-.container {
-    background-color: #ffffff;
-    border-radius: 12px;
-    padding: 20px;
-    max-width: 1000px;
-    width: 100%;
-    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+/* Header Styles */
+header {
+    text-align: center;
+    margin-bottom: 40px;
 }
 
-/* Search Bar */
-#search {
-    width: 100%;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    font-size: 16px;
-    transition: all 0.2s ease;
+header h1 {
+    font-size: 2.5em;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+header p {
+    font-size: 1.2em;
+    color: #555;
+}
+
+/* Button Styles */
+.btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1em;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn:hover {
+    background-color: #0056b3;
+}
+
+.controls {
+    text-align: center;
     margin-bottom: 20px;
 }
 
-#search:focus {
-    border-color: #3b5998;
-    outline: none;
-    box-shadow: 0px 0px 5px rgba(59, 89, 152, 0.5);
-}
-
-/* Task List */
-ul {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-}
-
-#taskList li {
-    display: grid;
-    grid-template-columns: 40px 1fr 200px 120px;
-    align-items: center;
-    gap: 10px;
-    background-color: #f9f9f9;
-    margin-bottom: 10px;
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    transition: background-color 0.3s ease;
-}
-
-#taskList li:hover {
-    background-color: #eef3fb;
-}
-
-#taskList li span {
-    flex-grow: 1;
-    cursor: pointer;
-    padding-right: 10px;
-}
-
-#taskList li input {
-    flex-grow: 1;
-    padding: 8px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    font-size: 16px;
-    transition: all 0.2s ease;
-}
-
-#taskList li input:focus {
-    border-color: #3b5998;
-    outline: none;
-    box-shadow: 0px 0px 5px rgba(59, 89, 152, 0.5);
-}
-
-/* Checkbox */
-.task-checkbox {
-    justify-self: start;
-    cursor: pointer;
-    width: 16px;
-    height: 16px;
-}
-
-/* Task Name */
-#taskList li span {
-    cursor: pointer;
-    padding-right: 10px;
-}
-
-/* Task Deadline */
-.task-deadline {
-    justify-self: end;
-    font-size: 14px;
-    color: #888;
-}
-
-/* Delete Button */
-#taskList li button {
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
-    font-size: 20px;
-    color: #e74c3c;
-    transition: color 0.2s ease;
-    justify-self: end;
-}
-
-#taskList li button:hover {
-    color: #c0392b;
-}
-
-/* Add Task Section */
-.add-task-container {
+/* Game Layout */
+#game {
     display: flex;
-    flex-direction: row;
-    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 40px;
 }
 
-.add-task-container input[type="text"], 
-.add-task-container input[type="datetime-local"] {
+#map {
+    height: 600px;
+    width: 800px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.puzzle-area {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5px;
+    width: 800px;
+    height: 600px;
+    background: #eee;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Puzzle Piece Styles */
+.puzzle-piece {
+    position: relative;
+    cursor: move;
+    overflow: hidden;
+    transition: transform 0.2s ease-in-out;
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.puzzle-piece img {
     width: 100%;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    font-size: 16px;
-    transition: all 0.2s ease;
+    height: 100%;
+    object-fit: cover;
 }
 
-.add-task-container input[type="text"]:focus, 
-.add-task-container input[type="datetime-local"]:focus {
-    border-color: #3b5998;
-    outline: none;
-    box-shadow: 0px 0px 5px rgba(59, 89, 152, 0.5);
+/* Dragging State */
+.puzzle-piece.dragging {
+    transform: scale(1.2);
+    z-index: 1000;
+    pointer-events: none;
 }
 
-.add-task-container button {
-    width: 30%;
-    background-color: #3b5998;
-    color: #ffffff;
-    border: none;
-    padding: 10px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
+/* Footer Styles */
+footer {
+    text-align: center;
+    margin-top: 40px;
+    font-size: 0.9em;
+    color: #777;
 }
 
-.add-task-container button:hover {
-    background-color: #314b82;
+footer a {
+    color: #007bff;
+    text-decoration: none;
 }
 
-/* Mobile responsiveness */
-@media (max-width: 600px) {
-    body {
-        padding: 10px;
-    }
+footer a:hover {
+    text-decoration: underline;
+}
 
-    .container {
-        padding: 15px;
-    }
-
-    .add-task-container {
+/* Responsive Design */
+@media (max-width: 1200px) {
+    #game {
         flex-direction: column;
-        gap: 10px;
+        align-items: center;
+    }
+
+    #map, .puzzle-area {
+        width: 100%;
+        height: 400px;
+    }
+}
+
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 2em;
+    }
+
+    header p {
+        font-size: 1em;
+    }
+
+    .btn {
+        font-size: 0.9em;
+    }
+
+    #map, .puzzle-area {
+        height: 300px;
     }
 }

@@ -1,21 +1,36 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>To-Do List</title>
+    <title>LAB C - Mapa i Puzzle</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
     <link rel="stylesheet" href="style.css">
+    <script defer src="script.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css"
+        integrity="sha256-sA+zWATbFveLLNqWO2gtiw3HL/lh1giY/Inf1BJ0z14=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js"
+        integrity="sha256-o9N1jGDZrf5tS+Ft4gbIK7mYMipq9lqpVJ91xHSyKhg=" crossorigin=""></script>
+    <script src="./leaflet-image.js"></script>
 </head>
 <body>
-    <div class="container">
-        <input type="text" id="search" placeholder="Search tasks..." oninput="searchTasks()">
-        <ul id="taskList"></ul>
-        <div class="add-task-container">
-            <input type="text" id="newTask" placeholder="New task...">
-            <input type="datetime-local" id="taskDeadline">
-            <button onclick="addTask()">Add Task</button>
-        </div>
+    <header>
+        <h1>Mapa i Puzzle</h1>
+        <p>Połącz mapę z puzzlami!</p>
+    </header>
+
+    <div class="controls">
+        <button id="locationBtn" class="btn">Moja lokalizacja</button>
+        <button id="downloadBtn" class="btn">Pobierz mapę</button>
     </div>
-    <script src="script.js"></script>
+    
+    <div id="game">
+        <div id="map"></div>
+        <div id="puzzleArea" class="puzzle-area"></div>
+    </div>
+
+    <footer>
+        <p>Stworzono z wykorzystaniem <a href="https://leafletjs.com/">Leaflet</a> oraz OpenStreetMap.</p>
+    </footer>
 </body>
 </html>
