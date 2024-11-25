@@ -1,37 +1,19 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LAB C - Mapa i Puzzle</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><text y=%2214%22 font-size=%2216%22>☀️</text></svg>">
+    <title>Weather App</title>
+    <script src="script.js"></script>
     <link rel="stylesheet" href="style.css">
-    <script defer src="script.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css"
-        integrity="sha256-sA+zWATbFveLLNqWO2gtiw3HL/lh1giY/Inf1BJ0z14=" crossorigin="" />
-    <script src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js"
-        integrity="sha256-o9N1jGDZrf5tS+Ft4gbIK7mYMipq9lqpVJ91xHSyKhg=" crossorigin=""></script>
-    <script src="./leaflet-image.js"></script>
 </head>
 <body>
-    <header>
-        <h1>Mapa i Puzzle</h1>
-        <p>Ułóż puzzle stworzone z wybranej mapy</p>
-    </header>
-
-    <div class="controls">
-        <button id="locationBtn" class="btn">Moja lokalizacja</button>
-        <button id="downloadBtn" class="btn">Pobierz mapę</button>
+    <div id="form">
+        <input type="text" id="city" />
+        <button onclick="getWeather()" id="getWeather">Get Weather</button>
     </div>
-    
-    <div id="map"></div>
-    <div id="game">
-        <div id="puzzleArea" class="puzzle-area"></div>
-        <div id="emptyArea" class="puzzle-area"></div>
+    <div id="weather">
+        <div id="display"></div>
     </div>
-
-    <footer>
-        <p>Stworzono z wykorzystaniem <a href="https://leafletjs.com/">Leaflet</a> oraz OpenStreetMap.</p>
-    </footer>
+    <div id="forecast"></div>
 </body>
 </html>

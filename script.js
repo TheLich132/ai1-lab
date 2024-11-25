@@ -1,231 +1,137 @@
-// Initialize map
-const map = L.map('map').setView([52.237049, 21.017532], 13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors'
-}).addTo(map);
-
-let marker;
-let puzzlePieces = [];
-let emptySlots = []; // Stores the empty slots in emptyArea
-let correctPositions = new Array(16).fill(false);
-let draggedPiece = null;
-let draggedFromArea = null; // Track if piece is dragged from puzzleArea or emptyArea
-
-// Request permissions
-async function requestPermissions() {
-    try {
-        const notificationPermission = await Notification.requestPermission();
-        console.log('Notification permission:', notificationPermission);
-    } catch (error) {
-        console.error('Error requesting notification permission:', error);
-    }
+const weatherEmojis = {
+    'clear sky': '🌞',
+    'few clouds': '🌤️',
+    'scattered clouds': '⛅️',
+    'broken clouds': '☁️',
+    'overcast clouds': '☁️',
+    'rain': '🌧️',
+    'light rain': '🌧️',
+    'moderate rain': '🌧️',
+    'drizzle': '🌧️',
+    'thunderstorm': '⛈️',
+    'snow': '❄️',
+    'mist': '🌫️'
 }
 
-// Location button handler
-document.getElementById('locationBtn').addEventListener('click', () => {
-    if ('geolocation' in navigator) {
-        navigator.geolocation.getCurrentPosition((position) => {
-            const { latitude, longitude } = position.coords;
-            if (marker) {
-                map.removeLayer(marker);
+// Function to get the current weather using XMLHttpRequest
+function getCurrentWeather(city) {
+  const apiKey = '7ded80d91f2b280ec979100cc8bbba94';
+  const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+  const xhr = new XMLHttpRequest();
+  xhr.open('GET', url, true);
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      const weatherData = JSON.parse(xhr.responseText);
+      console.log("Current weather data:");
+      console.log(weatherData);
+      displayCurrentWeather(weatherData);
+    }
+  };
+  xhr.send();
+}
+
+// Function to get the 5-day forecast using Fetch API
+function getForecast(city) {
+  const apiKey = '7ded80d91f2b280ec979100cc8bbba94';
+  const url = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`;
+  fetch(url)
+    .then(response => response.json())
+    .then(forecastData => displayForecast(forecastData));
+}
+
+// Function to display the current weather
+function displayCurrentWeather(weatherData) {
+  const weatherHtml = `
+    <h1>${weatherData.name}</h1>
+    <div id="display">
+        <div id="current">
+            <h2>Current Weather</h2>
+        </div>
+        <div id="cityWeather">
+            <p class="emoji">${weatherEmojis[weatherData.weather[0].description]}</p>
+            <p>${weatherData.weather[0].description}</p>
+            <p>Temperature: ${weatherData.main.temp}°C</p>
+        </div>
+    </div>
+  `;
+  document.getElementById('weather').innerHTML = weatherHtml;
+}
+
+// Function to display the 5-day forecast
+function displayForecast(forecastData) {
+    console.log("Forecast data:");
+    console.log(forecastData);
+    const hours = ["00:00", "03:00", "06:00", "09:00", "12:00", "15:00", "18:00", "21:00"];
+    const now = new Date(); // Current date and time
+
+    let forecastHtml = `
+      <h2>5-day forecast</h2>
+      <table>
+        <tr>
+          <th>Day</th>
+          ${hours.map(hour => `<th>${hour}</th>`).join('')}
+        </tr>
+    `;
+
+    // Group forecast data by day
+    const days = [];
+    forecastData.list.forEach(forecast => {
+        const date = forecast.dt_txt.split(' ')[0];
+        if (!days[date]) days[date] = [];
+        days[date].push(forecast);
+    });
+
+    let skip = 0;
+
+    // Populate forecast data in the table
+    Object.keys(days).forEach((date, dayIndex) => {
+        if (dayIndex < 5) {
+            if(dayIndex === 0) {
+                forecastHtml += `<tr><td>Today</td>`;
             }
-            marker = L.marker([latitude, longitude]).addTo(map);
-            map.setView([latitude, longitude], 13);
-            alert(`Współrzędne: ${latitude}, ${longitude}`);
-        });
-    }
-});
-
-// Download map button handler
-let play_counter = 0;
-document.getElementById('downloadBtn').addEventListener('click', () => {
-    if (play_counter === 0) {
-        leafletImage(map, function (err, canvas) {
-            if (err) {
-                console.error('Error capturing map:', err);
-                return;
+            else {
+                forecastHtml += `<tr><td>Day ${dayIndex + 1}</td>`;
             }
-            const imgData = canvas.toDataURL('image/png');
-            createPuzzle(imgData);
-        });
-        play_counter++;
-    } else {
-        alert('Odśwież stronę, aby rozpocząć nową grę!');
-    }
-});
 
-// Create puzzle from map image
-function createPuzzle(imgData) {
-    const puzzleArea = document.getElementById('puzzleArea');
-    const emptyArea = document.getElementById('emptyArea');
-    
-    puzzleArea.innerHTML = '';
-    emptyArea.innerHTML = ''; // Clear emptyArea for new empty slots
+            hours.forEach(hour => {
+                const forecast = days[date].find(f => f.dt_txt.includes(hour));
+                
+                if(skip === 0) {
+                    skip = 1;
+                    forecastHtml += `<td>&nbsp;</td>`;
+                } else {
+                    if (forecast) {
+                        const forecastDateTime = new Date(forecast.dt_txt);
 
-    puzzlePieces = [];
-    emptySlots = [];
-    correctPositions = new Array(16).fill(false);
-
-    // Create temporary image to get dimensions
-    const tempImg = new Image();
-    tempImg.onload = function () {
-        // Create puzzle pieces for puzzleArea
-        for (let i = 0; i < 16; i++) {
-            const piece = document.createElement('div');
-            piece.className = 'puzzle-piece';
-            piece.draggable = true;
-            piece.dataset.originalIndex = i; // Store original position
-            piece.dataset.currentIndex = i;  // Store current position
-
-            const img = document.createElement('img');
-            img.src = imgData;
-            piece.appendChild(img);
-
-            // Calculate clip path for each piece
-            const row = Math.floor(i / 4);
-            const col = i % 4;
-            img.style.clipPath = `inset(${row * 25}% ${100 - (col + 1) * 25}% ${100 - (row + 1) * 25}% ${col * 25}%)`;
-            img.style.position = 'absolute';
-            img.style.width = '400%';
-            img.style.height = '400%';
-            img.style.left = `${-col * 100}%`;
-            img.style.top = `${-row * 100}%`;
-
-            puzzlePieces.push(piece);
-        }
-
-        // Shuffle and add pieces to puzzleArea
-        shuffleArray(puzzlePieces);
-        puzzlePieces.forEach((piece, index) => {
-            piece.dataset.currentIndex = index;
-            puzzleArea.appendChild(piece);
-        });
-
-        // Create empty slots in emptyArea
-        for (let i = 0; i < 16; i++) {
-            const emptySlot = document.createElement('div');
-            emptySlot.className = 'puzzle-piece empty-slot';
-            emptySlot.dataset.index = i; // Store index of the slot
-
-            // Add grey background to empty slots
-            emptySlot.style.backgroundColor = '#ccc';
-            emptyArea.appendChild(emptySlot);
-            emptySlots.push(emptySlot); // Add slot to the array for tracking
-        }
-
-        // Setup drag and drop between puzzleArea and emptyArea
-        setupDragAndDrop();
-    };
-    tempImg.src = imgData;
-}
-
-// Shuffle array
-function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-}
-
-// Setup drag and drop
-function setupDragAndDrop() {
-    const pieces = document.querySelectorAll('.puzzle-piece');
-    const puzzleArea = document.getElementById('puzzleArea');
-    const emptyArea = document.getElementById('emptyArea');
-
-    pieces.forEach(piece => {
-        // Dragstart event
-        piece.addEventListener('dragstart', (e) => {
-            draggedPiece = piece;
-            draggedFromArea = piece.parentElement; // Remember which area the piece was dragged from
-            piece.classList.add('dragging');
-            e.dataTransfer.setData('text/plain', piece.dataset.currentIndex);
-        });
-
-        // Dragend event
-        piece.addEventListener('dragend', () => {
-            piece.classList.remove('dragging');
-            draggedPiece = null;
-            draggedFromArea = null;
-        });
-    });
-
-    // Allow dropping on empty slots in emptyArea
-    emptySlots.forEach(slot => {
-        slot.addEventListener('dragover', (e) => {
-            e.preventDefault();
-        });
-
-        slot.addEventListener('drop', (e) => {
-            e.preventDefault();
-            if (draggedPiece && slot.classList.contains('empty-slot')) {
-                // Replace empty slot with dragged puzzle piece
-                const tempSlot = slot.cloneNode(true); // Clone the empty slot
-
-                emptyArea.replaceChild(draggedPiece, slot);
-                draggedPiece.classList.remove('empty-slot');
-                draggedPiece.dataset.currentIndex = slot.dataset.index;
-
-                // Add the empty slot back to the puzzle area (switch places)
-                draggedFromArea.appendChild(tempSlot);
-                setupDragAndDrop(); // Re-initialize drag and drop for new elements
-
-                updatePuzzleState();
-            }
-        });
-    });
-
-    // Allow dropping back into puzzleArea
-    puzzleArea.addEventListener('dragover', (e) => {
-        e.preventDefault();
-    });
-
-    puzzleArea.addEventListener('drop', (e) => {
-        e.preventDefault();
-        if (draggedPiece && draggedPiece.parentElement === emptyArea) {
-            const tempPiece = document.createElement('div');
-            tempPiece.className = 'puzzle-piece empty-slot';
-            tempPiece.style.backgroundColor = '#ccc';
-
-            // Switch places between dragged piece and an empty slot
-            puzzleArea.appendChild(draggedPiece);
-            emptyArea.appendChild(tempPiece);
-            
-            setupDragAndDrop(); // Re-initialize drag and drop for new elements
-            updatePuzzleState();
-        }
-    });
-}
-
-// Function to check the positions of all pieces
-function updatePuzzleState() {
-    const emptyArea = document.getElementById('emptyArea');
-    const piecesInEmptyArea = emptyArea.querySelectorAll('.puzzle-piece');
-
-    correctPositions = Array.from(piecesInEmptyArea).map(piece => {
-        const originalIndex = parseInt(piece.dataset.originalIndex);
-        const currentIndex = parseInt(piece.dataset.currentIndex);
-        return originalIndex === currentIndex;
-    });
-
-    // If all pieces are correctly placed, notify the user
-    if (correctPositions.length === 16 && correctPositions.every(pos => pos)) {
-        console.log('Puzzle completed!');
-        if (Notification.permission === 'granted') {
-            new Notification('Gratulacje!', {
-                body: 'Układanka została poprawnie ułożona!'
+                        // Skip past forecasts on Day 1
+                        if (dayIndex === 0 && forecastDateTime <= now) {
+                            forecastHtml += `<td>&nbsp;</td>`;
+                        } else {
+                            forecastHtml += `<td>
+                            <p class="emoji">${weatherEmojis[forecast.weather[0].description]}</p>
+                            <p>${forecast.weather[0].description}</p>
+                            <p>Temp: ${forecast.main.temp}°C</p>
+                            </td>`;
+                        }
+                    } else {
+                        forecastHtml += `<td>&nbsp;</td>`;
+                    }
+                }
             });
-        } else {
-            alert('Gratulacje! Układanka została poprawnie ułożona!');
+
+            forecastHtml += `</tr>`;
         }
-    }
+    });
+
+    forecastHtml += `</table>`;
+    document.getElementById('forecast').innerHTML = forecastHtml;
 }
 
-// Initialize puzzle state on page load
-function initializePuzzle() {
-    correctPositions = new Array(16).fill(false);
-    requestPermissions();
+// Main function to handle the button click
+function getWeather() {
+  const city = document.getElementById('city').value;
+  if (city) {
+    getCurrentWeather(city);
+    getForecast(city);
+  }
 }
-
-// Initialize the game
-initializePuzzle();
